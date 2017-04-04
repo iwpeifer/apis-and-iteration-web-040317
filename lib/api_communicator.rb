@@ -2,28 +2,50 @@ require 'rest-client'
 require 'json'
 require 'pry'
 
-def get_character_movies_from_api(character)
-  #make the web request
-  all_characters = RestClient.get('http://www.swapi.co/api/people/')
-  character_hash = JSON.parse(all_characters)
-  
-  # iterate over the character hash to find the collection of `films` for the given
-  #   `character`
-  # collect those film API urls, make a web request to each URL to get the info
-  #  for that film
-  # return value of this method should be collection of info about each film.
-  #  i.e. an array of hashes in which each hash reps a given film
-  # this collection will be the argument given to `parse_character_movies`
-  #  and that method will do some nice presentation stuff: puts out a list
-  #  of movies by title. play around with puts out other info about a given film.
+
+def populate_character_list
+  character_list = []
+  i = 1
+  while i < 10
+    str = "http://www.swapi.co/api/people/?page=#{i}"
+    character_list << get_API(str)["results"]
+    i += 1
+  end
+  character_list.flatten
+end
+
+
+
+def get_character_movies_from_api(character_list, character)
+
+  character_list.each do |char|
+    if char["name"].downcase == character
+      new_film_arr = []
+      char["films"].each do |film|
+        new_film_arr << get_API(film)
+      end
+      return new_film_arr
+      else
+    end
+  end
+  return []
+end
+
+def get_API(url)
+  JSON.parse(RestClient.get(url))
 end
 
 def parse_character_movies(films_hash)
-  # some iteration magic and puts out the movies in a nice list
+  test_array = []
+  films_hash.each_with_index do |film, index|
+    puts "#{index + 1}. #{film['title']}"
+    test_array << film["title"]
+  end
+  test_array
 end
 
-def show_character_movies(character)
-  films_hash = get_character_movies_from_api(character)
+def show_character_movies(character_list, character)
+  films_hash = get_character_movies_from_api(character_list, character)
   parse_character_movies(films_hash)
 end
 
